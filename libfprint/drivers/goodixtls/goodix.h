@@ -65,6 +65,10 @@ typedef void (*GoodixNoneCallback)(FpDevice *dev, gpointer user_data,
 typedef void (*GoodixDefaultCallback)(FpDevice *dev, guint8 *data,
                                       guint16 length, gpointer user_data,
                                       GError *error);
+typedef GoodixDefaultCallback GoodixTlsCallback;
+
+typedef void (*GoodixImageCallback)(FpDevice* dev, guint8* data, guint16 length,
+                                    gpointer user_data, GError* error);
 
 gchar *data_to_str(guint8 *data, guint32 length);
 
@@ -110,6 +114,7 @@ void goodix_receive_timeout_cb(FpDevice *dev, gpointer user_data);
 
 void goodix_receive_data(FpDevice *dev);
 
+void goodix_start_read_loop(FpDevice* dev);
 // ---- GOODIX RECEIVE SECTION END ----
 
 // -----------------------------------------------------------------------------
@@ -132,22 +137,22 @@ void goodix_send_protocol(FpDevice *dev, guint8 cmd, guint8 *payload,
 void goodix_send_nop(FpDevice *dev, GoodixNoneCallback callback,
                      gpointer user_data);
 
-void goodix_send_mcu_get_image(FpDevice *dev, GoodixNoneCallback callback,
+void goodix_send_mcu_get_image(FpDevice *dev, guint8* payload, guint16 length, GoodixImageCallback callback,
                                gpointer user_data);
 
 void goodix_send_mcu_switch_to_fdt_down(FpDevice *dev, guint8 *mode,
-                                        guint16 length,
+                                        guint16 length, gboolean reply,
                                         GDestroyNotify free_func,
                                         GoodixDefaultCallback callback,
                                         gpointer user_data);
 
 void goodix_send_mcu_switch_to_fdt_up(FpDevice *dev, guint8 *mode,
-                                      guint16 length, GDestroyNotify free_func,
+                                      guint16 length, gboolean reply, GDestroyNotify free_func,
                                       GoodixDefaultCallback callback,
                                       gpointer user_data);
 
 void goodix_send_mcu_switch_to_fdt_mode(FpDevice *dev, guint8 *mode,
-                                        guint16 length,
+                                        guint16 length, gboolean reply,
                                         GDestroyNotify free_func,
                                         GoodixDefaultCallback callback,
                                         gpointer user_data);
@@ -192,8 +197,8 @@ void goodix_send_firmware_version(FpDevice *dev,
 void goodix_send_query_mcu_state(FpDevice *dev, GoodixDefaultCallback callback,
                                  gpointer user_data);
 
-void goodix_send_request_tls_connection(FpDevice *dev,
-                                        GoodixNoneCallback callback,
+void goodix_send_request_tls_connection(FpDevice* dev,
+                                        GoodixDefaultCallback callback,
                                         gpointer user_data);
 
 void goodix_send_tls_successfully_established(FpDevice *dev,
@@ -209,6 +214,9 @@ void goodix_send_preset_psk_read(FpDevice *dev, guint32 flags, guint16 length,
                                  GoodixPresetPskReadCallback callback,
                                  gpointer user_data);
 
+void goodix_send_read_otp(FpDevice* dev, GoodixDefaultCallback callback,
+                          gpointer user_data);
+
 // ---- GOODIX SEND SECTION END ----
 
 // -----------------------------------------------------------------------------
@@ -219,16 +227,28 @@ gboolean goodix_dev_init(FpDevice *dev, GError **error);
 
 gboolean goodix_dev_deinit(FpDevice *dev, GError **error);
 
+void goodix_reset_state(FpDevice* dev);
+
 // ---- DEV SECTION END ----
 
 // -----------------------------------------------------------------------------
 
 // ---- TLS SECTION START ----
 
-void goodix_tls_run_state(FpiSsm *ssm, FpDevice *dev);
+void goodix_read_tls(FpDevice* dev, GoodixTlsCallback callback,
+                     gpointer user_data);
+
+void goodix_tls_run_state(FpiSsm* ssm, FpDevice* dev);
 
 void goodix_tls_complete(FpiSsm *ssm, FpDevice *dev, GError *error);
 
-void goodix_tls(FpDevice *dev);
+void goodix_tls(FpDevice* dev, GoodixNoneCallback callback, gpointer user_data);
+
+gboolean goodix_shutdown_tls(FpDevice* dev, GError** error);
+
+void goodix_tls_read_image(FpDevice* dev, guint8* payload, guint16 length, GoodixImageCallback callback,
+                           gpointer user_data);
+
+void goodix_tls_decrypt_image(FpDevice* dev, guint8** data, guint16* len);
 
 // ---- TLS SECTION END ----

@@ -19,13 +19,14 @@
 
 #pragma once
 
-#define GOODIX_EP_IN_MAX_BUF_SIZE (0x2000)
+#define GOODIX_EP_IN_MAX_BUF_SIZE (0x10000)
 #define GOODIX_EP_OUT_MAX_BUF_SIZE (0x40)
 
 #define GOODIX_NULL_CHECKSUM (0x88)
 
 #define GOODIX_FLAGS_MSG_PROTOCOL (0xa0)
 #define GOODIX_FLAGS_TLS (0xb0)
+#define GOODIX_FLAGS_TLS_DATA (0xb2)
 
 #define GOODIX_CMD_NOP (0x00)
 #define GOODIX_CMD_MCU_GET_IMAGE (0x20)
@@ -109,9 +110,15 @@ typedef struct __attribute__((__packed__)) _GoodixQueryMcuState {
 } GoodixQueryMcuState;
 
 typedef struct __attribute__((__packed__)) _GoodixPresetPsk {
+  guint32 length;
+  guint32 offset;
+  guint32 flags;
+} GoodixPresetPsk;
+
+typedef struct __attribute__((__packed__)) _GoodixPresetPskResponse {
   guint32 flags;
   guint32 length;
-} GoodixPresetPsk;
+} GoodixPresetPskResponse;
 
 typedef struct __attribute__((__packed__)) _GoodixDefault {
   guint8 unused_flags;
